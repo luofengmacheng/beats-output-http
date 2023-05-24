@@ -79,10 +79,7 @@ func NewClient(s ClientSettings) (*Client, error) {
 	var err error
 
 	dialer = transport.NetDialer(s.Timeout)
-	tlsDialer, err = transport.TLSDialer(dialer, s.TLS, s.Timeout)
-	if err != nil {
-		return nil, err
-	}
+	tlsDialer = transport.TLSDialer(dialer, s.TLS, s.Timeout)
 
 	if st := s.Observer; st != nil {
 		dialer = transport.StatsDialer(dialer, st)
