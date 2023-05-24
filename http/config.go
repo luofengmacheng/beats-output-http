@@ -25,6 +25,7 @@ type httpConfig struct {
 	ContentType      string            `config:"content_type"`
 	Backoff          backoff           `config:"backoff"`
 	Format           string            `config:"format"`
+	LogLevel         string            `config:"log_level"`
 }
 
 type backoff struct {
@@ -52,6 +53,7 @@ var (
 			Max:  60 * time.Second,
 		},
 		Format:           "json",
+		LogLevel:         "ERROR",
 	}
 )
 

@@ -30,6 +30,7 @@ type Client struct {
 	observer         outputs.Observer
 	headers          map[string]string
 	format           string
+	logLevel         string
 }
 
 // ClientSettings struct
@@ -48,6 +49,7 @@ type ClientSettings struct {
 	Headers            map[string]string
 	ContentType        string
 	Format             string
+	LogLevel           string
 }
 
 // Connection struct
@@ -117,6 +119,7 @@ func NewClient(s ClientSettings) (*Client, error) {
 					Dial:    dialer.Dial,
 					DialTLS: tlsDialer.Dial,
 					Proxy:   proxy,
+					DisableKeepAlives: true,
 				},
 				Timeout: s.Timeout,
 			},
@@ -128,6 +131,7 @@ func NewClient(s ClientSettings) (*Client, error) {
 		batchPublish:     s.BatchPublish,
 		headers:          s.Headers,
 		format:           s.Format,
+		logLevel:         s.LogLevel,
 	}
 
 	return client, nil
@@ -153,6 +157,7 @@ func (client *Client) Clone() *Client {
 			Headers:          client.headers,
 			ContentType:      client.ContentType,
 			Format:           client.format,
+			LogLevel:         client.logLevel,
 		},
 	)
 	return c
@@ -234,10 +239,15 @@ func (client *Client) BatchPublishEvent(data []publisher.Event) error {
 	}
 	status, _, err := client.request("POST", client.params, events, client.headers)
 	if err != nil {
+		fmt.Printf("%s ERROR Publish batch event to %s failed: status=%v error=%s\n", time.Now().Format("2006-01-02 15:04:05"), client.URL, status, err)
 		logger.Warn("Fail to insert a single event: %s", err)
 		if err == ErrJSONEncodeFailed {
 			// don't retry unencodable values
 			return nil
+		}
+	} else {
+		if client.logLevel == "INFO" {
+			fmt.Printf("%s %s Publish batch event to %s success: status=%v\n", time.Now().Format("2006-01-02 15:04:05"), client.logLevel, client.URL, status)
 		}
 	}
 	switch {
@@ -259,10 +269,15 @@ func (client *Client) PublishEvent(data publisher.Event) error {
 	logger.Debugf("Publish event: %s", event)
 	status, _, err := client.request("POST", client.params, makeEvent(&event.Content), client.headers)
 	if err != nil {
+		fmt.Printf("%s ERROR Publish event to %s failed: status=%v error=%s\n", time.Now().Format("2006-01-02 15:04:05"), client.URL, status, err)
 		logger.Warn("Fail to insert a single event: %s", err)
 		if err == ErrJSONEncodeFailed {
 			// don't retry unencodable values
 			return nil
+		}
+	} else {
+		if client.logLevel == "INFO" {
+			fmt.Printf("%s %s Publish event to %s success: status=%v\n", time.Now().Format("2006-01-02 15:04:05"), client.logLevel, client.URL, status)
 		}
 	}
 	switch {

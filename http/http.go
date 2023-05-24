@@ -2,6 +2,8 @@ package http
 
 import (
 	"errors"
+	"fmt"
+	"time"
 	"github.com/elastic/beats/v7/libbeat/beat"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/logp"
@@ -14,7 +16,7 @@ func init() {
 }
 
 var (
-	logger = logp.NewLogger("output.http")
+	logger = logp.NewLogger("http")
 	// ErrNotConnected indicates failure due to client having no valid connection
 	ErrNotConnected = errors.New("not connected")
 	// ErrJSONEncodeFailed indicates encoding failures
@@ -52,7 +54,8 @@ func MakeHTTP(
 	}
 	clients := make([]outputs.NetworkClient, len(hosts))
 	for i, host := range hosts {
-		logger.Info("Making client for host: " + host)
+		logger.Infof("Making client for host: %v", host)
+		fmt.Printf("%s Making client for host: %v\n", time.Now().Format("2006-01-02 15:04:05"), host)
 		hostURL, err := common.MakeURL(config.Protocol, config.Path, host, 80)
 		if err != nil {
 			logger.Error("Invalid host param set: %s, Error: %v", host, err)
@@ -74,6 +77,7 @@ func MakeHTTP(
 			Headers:          config.Headers,
 			ContentType:      config.ContentType,
 			Format:           config.Format,
+			LogLevel:         config.LogLevel,
 		})
 
 		if err != nil {
